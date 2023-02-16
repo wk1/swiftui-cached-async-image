@@ -253,9 +253,9 @@ public struct CachedAsyncImage<Content>: View where Content: View {
     ///   - transaction: The transaction to use when the phase changes.
     ///   - content: A closure that takes the load phase as an input, and
     ///     returns the view to display for the specified phase.
-    public init(url: URL?, urlCache: URLCache = .shared, scale: CGFloat = 1, transaction: Transaction = Transaction(), @ViewBuilder content: @escaping (AsyncImagePhase) -> Content) {
+    public init(url: URL?, session: URLSession?, urlCache: URLCache = .shared, scale: CGFloat = 1, transaction: Transaction = Transaction(), @ViewBuilder content: @escaping (AsyncImagePhase) -> Content) {
         let urlRequest = url == nil ? nil : URLRequest(url: url!)
-        self.init(urlRequest: urlRequest, urlCache: urlCache, scale: scale, transaction: transaction, content: content)
+        self.init(urlRequest: urlRequest, session: session, urlCache: urlCache, scale: scale, transaction: transaction, content: content)
     }
     
     /// Loads and displays a modifiable image from the specified URL in phases.
@@ -293,11 +293,15 @@ public struct CachedAsyncImage<Content>: View where Content: View {
     ///   - transaction: The transaction to use when the phase changes.
     ///   - content: A closure that takes the load phase as an input, and
     ///     returns the view to display for the specified phase.
-    public init(urlRequest: URLRequest?, urlCache: URLCache = .shared, scale: CGFloat = 1, transaction: Transaction = Transaction(), @ViewBuilder content: @escaping (AsyncImagePhase) -> Content) {
-        let configuration = URLSessionConfiguration.default
-        configuration.urlCache = urlCache
+    public init(urlRequest: URLRequest?, session: URLSession?, urlCache: URLCache = .shared, scale: CGFloat = 1, transaction: Transaction = Transaction(), @ViewBuilder content: @escaping (AsyncImagePhase) -> Content) {
+        if let session = session {
+            self.urlSession = session
+        } else {
+            let configuration = URLSessionConfiguration.default
+            configuration.urlCache = urlCache
+            self.urlSession =  URLSession(configuration: configuration)
+        }
         self.urlRequest = urlRequest
-        self.urlSession =  URLSession(configuration: configuration)
         self.scale = scale
         self.transaction = transaction
         self.content = content
